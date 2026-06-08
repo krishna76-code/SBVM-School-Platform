@@ -1,0 +1,49 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Env files (contains credentials)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+backend/.env
+backend/src/config/.env
+
+# Build & Output directories
+dist/
+build/
+out/
+.next/
+dist-ssr/
+*.tsbuildinfo
+
+# Debug/Task files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+.system_generated/
+*.log
+
+# Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.settings/
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

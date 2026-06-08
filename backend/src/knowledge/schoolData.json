@@ -1,0 +1,86 @@
+[
+  {
+    "id": "admissions_dates",
+    "category": "Admission Process",
+    "title": "Registration and Academic Dates",
+    "content": "Admissions for the new academic year open in January. Registration forms must be completed online or at the school admissions desk. Classes officially commence in the first week of April. The school follows the CBSE academic calendar, with a summer vacation in May-June and a winter break in December."
+  },
+  {
+    "id": "admissions_criteria",
+    "category": "Admission Process",
+    "title": "Admission Criteria and Assessment",
+    "content": "For Nursery to Grade 8, direct admission is granted based on seat availability and verification of demographic profiles. For Grade 9 to 12, candidate selection is based on a written entrance exam (evaluating English, Science, Mathematics) followed by a personal interview to gauge academic aptitude."
+  },
+  {
+    "id": "admissions_documents",
+    "category": "Admission Process",
+    "title": "Documents Required for Admission",
+    "content": "During the final admission process, applicants must submit the student's passport-sized photo, Aadhaar card scan, previous class marksheet/report card, birth certificate, and transfer certificate (TC) from the previous school."
+  },
+  {
+    "id": "facilities_academic",
+    "category": "School Facilities",
+    "title": "Academic Infrastructure and Laboratories",
+    "content": "SBVM features modern smart digital classrooms equipped with projectors, high-speed Wi-Fi, and interactive boards. We host high-tech physics, chemistry, biology, and computer science laboratories to facilitate practical learning."
+  },
+  {
+    "id": "facilities_sports",
+    "category": "School Facilities",
+    "title": "Sports and Co-curricular Facilities",
+    "content": "The campus houses a large indoor-outdoor sports complex including a cricket ground, basketball courts, badminton arena, athletics track, and a clean swimming pool with professional coaches for student safety and training."
+  },
+  {
+    "id": "facilities_library_transport",
+    "category": "School Facilities",
+    "title": "Library and Transportation",
+    "content": "The school has a fully automated central library with over 10,000 reference books, educational journals, and digital media. Our transportation network features GPS-tracked school buses with speed governors and active cameras."
+  },
+  {
+    "id": "hostel_infrastructure",
+    "category": "Hostel Information",
+    "title": "Hostel Infrastructure and Rooms",
+    "content": "SBVM offers premium residential boarding facilities with separate hostels for boys and girls. Rooms are spacious, well-ventilated, and shared by 3-4 students. Each hostel is managed by full-time residential wardens to maintain discipline and safety."
+  },
+  {
+    "id": "hostel_dining_medical",
+    "category": "Hostel Information",
+    "title": "Hostel Dining, Hygiene and Medical Facilities",
+    "content": "The boarding school dining hall serves hygienic, nutritious vegetarian meals (breakfast, lunch, evening snacks, dinner) prepared under strict quality guidelines. A 24/7 medical infirmary with visiting doctors and round-the-clock emergency transport is available."
+  },
+  {
+    "id": "fees_junior",
+    "category": "Fee Structure",
+    "title": "Tuition Fees Nursery to Class 8",
+    "content": "The annual tuition fee structure for lower grades is: Nursery, LKG, and UKG is INR 25,000 per annum. Grade 1 to 5 tuition fee is INR 40,000 per annum. Grade 6 to 8 tuition fee is INR 55,000 per annum. Fees can be paid in quarterly installments."
+  },
+  {
+    "id": "fees_senior",
+    "category": "Fee Structure",
+    "title": "Tuition Fees Grade 9 to 12",
+    "content": "The annual tuition fee structure for higher grades is: Grade 9 and 10 tuition fee is INR 70,000 per annum. Grade 11 and 12 Commerce or Arts streams is INR 80,000 per annum. Grade 11 and 12 Science stream (with integrated IIT-JEE and NEET coaching classes) is INR 95,000 per annum."
+  },
+  {
+    "id": "scholarship_merit",
+    "category": "Scholarship Rules",
+    "title": "Merit-based and Entrance Scholarships",
+    "content": "SBVM offers generous merit-based scholarships capped at a maximum of 75% total concession. Students scoring 95% or above in previous boards get a 50% concession. Entrance test scores of 90% or above receive a 40% concession. The higher of the board marks or entrance test concession is applied."
+  },
+  {
+    "id": "scholarship_needs_sports",
+    "category": "Scholarship Rules",
+    "title": "Need-based and Sports Scholarships",
+    "content": "Need-based scholarships are available: 15% concession for family income below INR 2.5 Lakhs per annum, and 10% concession for income below INR 5 Lakhs. Sports achievement concessions are: 25% for National-level participants, and 15% for State-level achievers. Concessions are additive up to 75% max."
+  },
+  {
+    "id": "programs_curriculum",
+    "category": "Programs Offered",
+    "title": "Academic Streams and Curriculum",
+    "content": "SBVM offers the Central Board of Secondary Education (CBSE) curriculum from Nursery to Class 12. For Senior Secondary (Classes 11 and 12), three streams are available: Science (Medical with Biology or Non-Medical with Mathematics), Commerce, and Arts."
+  },
+  {
+    "id": "programs_coaching",
+    "category": "Programs Offered",
+    "title": "Integrated Coaching and Competitive Exams",
+    "content": "SBVM provides an integrated coaching model for senior secondary students. Regular classes are synced with intensive preparation for competitive entrance exams like IIT-JEE (Mains & Advanced), NEET, KVPY, and national Olympiads, conducted by expert faculty."
+  }
+]

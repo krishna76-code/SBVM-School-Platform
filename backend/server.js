@@ -1,0 +1,197 @@
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+
+import mongoose from 'mongoose';
+import connectDB from './src/config/db.js';
+import authRoutes from './src/routes/authRoutes.js';
+import admissionRoutes from './src/routes/admissionRoutes.js';
+import academicRoutes from './src/routes/academicRoutes.js';
+import aiRoutes from './src/routes/aiRoutes.js';
+import assignmentRoutes from './src/routes/assignmentRoutes.js';
+import feeRoutes from './src/routes/feeRoutes.js';
+import scholarshipRoutes from './src/routes/scholarshipRoutes.js';
+import studyAssistantRoutes from './src/routes/studyAssistantRoutes.js';
+import errorMiddleware from './src/middlewares/errorMiddleware.js';
+
+import User from './src/models/User.js';
+import AdminProfile from './src/models/AdminProfile.js';
+import ScholarshipRule from './src/models/ScholarshipRule.js';
+import { seedProspectus } from './src/services/chroma.service.js';
+
+// Load Env variables
+dotenv.config();
+
+// Connect to Database
+connectDB();
+
+const app = express();
+
+// Security Middlewares
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(cookieParser());
+app.use(express.json());
+
+// API Rate Limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes.' }
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Limit each IP to 30 queries per hour
+  message: { message: 'AI query limit reached for this hour. Please try again later.' }
+});
+
+app.use('/api/', generalLimiter);
+app.use('/api/v1/ai/', aiLimiter);
+app.use('/api/v1/study/', aiLimiter);
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/admissions', admissionRoutes);
+app.use('/api/v1/portal', academicRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/study', studyAssistantRoutes);
+app.use('/api/v1/assignments', assignmentRoutes);
+app.use('/api/v1/portal/fees', feeRoutes);
+app.use('/api/v1/scholarships', scholarshipRoutes);
+
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Global Error Handler
+app.use(errorMiddleware);
+
+// Port configuration
+const PORT = process.env.PORT || 5000;
+
+// Seed Initial Admin User if none exists
+const seedAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ role: 'Admin' });
+    if (!adminExists) {
+      console.log('No Admin found. Seeding initial System Administrator...');
+      
+      const userId = new mongoose.Types.ObjectId();
+      const adminProfile = await AdminProfile.create({
+        user: userId,
+        employeeId: 'ADM001',
+        department: 'Executive Office',
+        designation: 'Director of Operations'
+      });
+
+      const adminUser = await User.create({
+        _id: userId,
+        email: 'admin@sbvm.edu.in',
+        phone: '9111111111',
+        passwordHash: 'adminPassword123', // Pre-save hooks hashes this
+        role: 'Admin',
+        profileRef: adminProfile._id,
+        roleRefModel: 'AdminProfile'
+      });
+
+      console.log('==================================================');
+      console.log('ADMIN SEEDED SUCCESSFULLY');
+      console.log('Login Email: admin@sbvm.edu.in');
+      console.log('Password: adminPassword123');
+      console.log('==================================================');
+    }
+  } catch (error) {
+    console.error('Error seeding admin:', error.message);
+  }
+};
+
+const seedScholarships = async () => {
+  try {
+    const rulesCount = await ScholarshipRule.countDocuments();
+    if (rulesCount === 0) {
+      console.log('No Scholarship Rules found. Seeding initial rule templates...');
+      
+      await ScholarshipRule.create([
+        {
+          classRange: 'Junior (Nursery-8)',
+          boardTiers: [
+            { minScore: 90, concession: 20 },
+            { minScore: 85, concession: 15 }
+          ],
+          entranceTiers: [
+            { minScore: 85, concession: 15 }
+          ],
+          sportsNationalConcession: 25,
+          sportsStateConcession: 15,
+          incomeBelow25kConcession: 15,
+          incomeBelow50kConcession: 10,
+          maxTotalConcession: 75,
+          eligiblePrograms: [
+            'Nursery', 'LKG', 'UKG',
+            'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
+            'Class 6', 'Class 7', 'Class 8'
+          ]
+        },
+        {
+          classRange: 'Secondary (9-10)',
+          boardTiers: [
+            { minScore: 92, concession: 30 },
+            { minScore: 88, concession: 20 }
+          ],
+          entranceTiers: [
+            { minScore: 88, concession: 25 }
+          ],
+          sportsNationalConcession: 25,
+          sportsStateConcession: 15,
+          incomeBelow25kConcession: 15,
+          incomeBelow50kConcession: 10,
+          maxTotalConcession: 75,
+          eligiblePrograms: ['Class 9', 'Class 10']
+        },
+        {
+          classRange: 'Senior Secondary (11-12)',
+          boardTiers: [
+            { minScore: 95, concession: 50 },
+            { minScore: 90, concession: 30 },
+            { minScore: 85, concession: 20 }
+          ],
+          entranceTiers: [
+            { minScore: 90, concession: 40 },
+            { minScore: 80, concession: 25 }
+          ],
+          sportsNationalConcession: 25,
+          sportsStateConcession: 15,
+          incomeBelow25kConcession: 15,
+          incomeBelow50kConcession: 10,
+          maxTotalConcession: 75,
+          eligiblePrograms: [
+            'Class 11 Science', 'Class 11 Commerce', 'Class 11 Arts',
+            'Class 12 Science', 'Class 12 Commerce', 'Class 12 Arts'
+          ]
+        }
+      ]);
+      console.log('Scholarship rules seeded successfully.');
+    }
+  } catch (err) {
+    console.error('Error seeding scholarship rules:', err.message);
+  }
+};
+
+app.listen(PORT, async () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  await seedAdmin();
+  await seedScholarships();
+  await seedProspectus();
+});
