@@ -35,6 +35,11 @@
 }
 
 /* Custom Scrollbars */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 102, 255, 0.3) rgba(15, 22, 92, 0.1);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -53,16 +58,26 @@
   background: rgba(59, 102, 255, 0.5);
 }
 
-/* Modern Gradient Text */
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-gold-300 to-brand-500;
+/* Modern Gradient Text & Utility Classes */
+@layer utilities {
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-gold-300 to-brand-500;
+  }
+
+  .gradient-text-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-400 via-yellow-200 to-amber-500;
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
 }
 
-.gradient-text-gold {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-gold-400 via-yellow-200 to-amber-500;
-}
-
-/* Micro-animations */
+/* Micro-animations and Keyframes */
 @keyframes pulseGlow {
   0%, 100% {
     opacity: 0.5;
@@ -72,6 +87,27 @@
   }
 }
 
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .pulse-glow {
   animation: pulseGlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+

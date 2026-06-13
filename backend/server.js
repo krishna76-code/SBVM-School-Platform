@@ -26,7 +26,7 @@ import { seedProspectus } from './src/services/chroma.service.js';
 dotenv.config();
 
 // Connect to Database
-connectDB();
+await connectDB();
 
 const app = express();
 

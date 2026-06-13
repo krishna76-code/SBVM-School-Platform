@@ -47,18 +47,22 @@ export const getAdmissionResponse = asyncHandler(async (req, res) => {
     }
 
     // 3. Vector Similarity Search in ChromaDB
-    const queryEmbedding = await generateEmbedding(message);
-    const matches = await queryDocuments('prospectus', queryEmbedding, 3);
-
     let contextString = '';
-    if (matches && matches.length > 0) {
-      // Filter matches by cosine similarity threshold (0.3 similarity corresponds to 0.7 distance)
-      const relevantMatches = matches.filter(m => m.score > 0.3);
-      if (relevantMatches.length > 0) {
-        contextString = "Retrieved Prospectus Context:\n" + relevantMatches
-          .map(m => `[Category: ${m.metadata.category || 'Prospectus'} - ${m.metadata.title || 'Section'}]: ${m.text}`)
-          .join('\n\n');
+    try {
+      const queryEmbedding = await generateEmbedding(message);
+      const matches = await queryDocuments('prospectus', queryEmbedding, 3);
+
+      if (matches && matches.length > 0) {
+        // Filter matches by cosine similarity threshold (0.3 similarity corresponds to 0.7 distance)
+        const relevantMatches = matches.filter(m => m.score > 0.3);
+        if (relevantMatches.length > 0) {
+          contextString = "Retrieved Prospectus Context:\n" + relevantMatches
+            .map(m => `[Category: ${m.metadata.category || 'Prospectus'} - ${m.metadata.title || 'Section'}]: ${m.text}`)
+            .join('\n\n');
+        }
       }
+    } catch (chromaError) {
+      console.warn('[AI Controller] ChromaDB query failed, proceeding without vector context:', chromaError.message);
     }
 
     if (!contextString) {
