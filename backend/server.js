@@ -15,6 +15,7 @@ import assignmentRoutes from './src/routes/assignmentRoutes.js';
 import feeRoutes from './src/routes/feeRoutes.js';
 import scholarshipRoutes from './src/routes/scholarshipRoutes.js';
 import studyAssistantRoutes from './src/routes/studyAssistantRoutes.js';
+import galleryRoutes from './src/routes/galleryRoutes.js';
 import errorMiddleware from './src/middlewares/errorMiddleware.js';
 
 import User from './src/models/User.js';
@@ -65,6 +66,7 @@ app.use('/api/v1/study', studyAssistantRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
 app.use('/api/v1/portal/fees', feeRoutes);
 app.use('/api/v1/scholarships', scholarshipRoutes);
+app.use('/api/v1/gallery', galleryRoutes);
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
