@@ -6,6 +6,7 @@ import Hero from '../components/public/Hero';
 import AboutSection from '../components/public/AboutSection';
 import AchievementsSection from '../components/public/AchievementsSection';
 import FacilitiesSection from '../components/public/FacilitiesSection';
+import CampusGallery from '../components/public/CampusGallery';
 import TestimonialsSection from '../components/public/TestimonialsSection';
 import AdmissionBanner from '../components/public/AdmissionBanner';
 import ContactCTA from '../components/public/ContactCTA';
@@ -58,6 +59,9 @@ const Home = () => {
 
       {/* Campus Facilities Section */}
       <FacilitiesSection />
+
+      {/* Campus Gallery Section */}
+      <CampusGallery />
 
       {/* Community Testimonials Section */}
       <TestimonialsSection />

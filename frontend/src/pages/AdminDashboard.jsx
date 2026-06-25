@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ShieldCheck, Eye, RefreshCw, Calendar, Award, Users, 
-  Bell, ClipboardList, Search, Filter, Plus, Trash2, FileText, X, AlertCircle
+  Bell, ClipboardList, Search, Filter, Plus, Trash2, FileText, X, AlertCircle,
+  Image as ImageIcon, Sparkles, Camera
 } from 'lucide-react';
 import API from '../services/api';
 
@@ -82,6 +83,105 @@ const AdminDashboard = () => {
   const [scholarshipRules, setScholarshipRules] = useState([]);
   const [editingRule, setEditingRule] = useState(null);
   const [savingRule, setSavingRule] = useState(false);
+
+  // ==================== GALLERY STATE ====================
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [gallerySearch, setGallerySearch] = useState('');
+  const [galleryCategory, setGalleryCategory] = useState('');
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [newGallery, setNewGallery] = useState({ title: '', category: 'General', tags: '', caption: '' });
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [generatingCaption, setGeneratingCaption] = useState(false);
+  const [publishingGallery, setPublishingGallery] = useState(false);
+
+  const fetchGalleryItems = async () => {
+    setLoading(true);
+    try {
+      const { data } = await API.get(`/gallery?category=${galleryCategory}`);
+      let items = data.data || [];
+      if (gallerySearch) {
+        items = items.filter(item => 
+          item.title.toLowerCase().includes(gallerySearch.toLowerCase()) || 
+          item.caption?.toLowerCase().includes(gallerySearch.toLowerCase()) ||
+          item.tags?.some(t => t.toLowerCase().includes(gallerySearch.toLowerCase()))
+        );
+      }
+      setGalleryItems(items);
+    } catch (err) {
+      console.error('Error fetching gallery:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateCaption = async () => {
+    if (!newGallery.tags) {
+      alert('Please enter some tags (e.g. Annual Day, Dance, Stage) first.');
+      return;
+    }
+    setGeneratingCaption(true);
+    try {
+      const { data } = await API.post('/gallery/generate-caption', {
+        title: newGallery.title,
+        category: newGallery.category,
+        tags: newGallery.tags
+      });
+      setNewGallery(prev => ({ ...prev, caption: data.caption }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error generating caption.');
+    } finally {
+      setGeneratingCaption(false);
+    }
+  };
+
+  const handleCreateGalleryItem = async (e) => {
+    e.preventDefault();
+    if (!selectedImageFile) {
+      alert('Please select an image file to upload.');
+      return;
+    }
+    setPublishingGallery(true);
+    const form = new FormData();
+    form.append('image', selectedImageFile);
+    form.append('title', newGallery.title);
+    form.append('category', newGallery.category);
+    form.append('caption', newGallery.caption);
+    const tagsArray = newGallery.tags.split(',').map(t => t.trim()).filter(Boolean);
+    form.append('tags', JSON.stringify(tagsArray));
+
+    try {
+      await API.post('/gallery', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert('Image added to campus gallery successfully!');
+      setShowGalleryModal(false);
+      setNewGallery({ title: '', category: 'General', tags: '', caption: '' });
+      setSelectedImageFile(null);
+      setImagePreviewUrl('');
+      fetchGalleryItems();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error uploading gallery item.');
+    } finally {
+      setPublishingGallery(false);
+    }
+  };
+
+  const handleDeleteGalleryItem = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this gallery item permanently?')) return;
+    try {
+      await API.delete(`/gallery/${id}`);
+      alert('Gallery item deleted.');
+      fetchGalleryItems();
+    } catch (err) {
+      alert('Error deleting gallery item.');
+    }
+  };
+
+  const handleGallerySearch = (e) => {
+    e.preventDefault();
+    fetchGalleryItems();
+  };
 
   const fetchScholarshipRules = async () => {
     setLoading(true);
@@ -215,7 +315,8 @@ const AdminDashboard = () => {
     if (activeTab === 'students') fetchStudents();
     if (activeTab === 'parents') fetchParents();
     if (activeTab === 'scholarships') fetchScholarshipRules();
-  }, [activeTab, noticePage, resultPage, studentPage, parentPage]);
+    if (activeTab === 'gallery') fetchGalleryItems();
+  }, [activeTab, noticePage, resultPage, studentPage, parentPage, galleryCategory]);
 
   // Handle searches on enter / click
   const handleNoticeSearch = (e) => { e.preventDefault(); setNoticePage(1); fetchNotices(); };
@@ -364,7 +465,8 @@ const AdminDashboard = () => {
           { id: 'results', name: 'Results', icon: ClipboardList },
           { id: 'students', name: 'Students', icon: Users },
           { id: 'parents', name: 'Parents', icon: Users },
-          { id: 'scholarships', name: 'Scholarships', icon: Award }
+          { id: 'scholarships', name: 'Scholarships', icon: Award },
+          { id: 'gallery', name: 'Gallery', icon: ImageIcon }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1177,6 +1279,95 @@ const AdminDashboard = () => {
       </div>
     )}
 
+    {/* ============================================================ */}
+    {/* 8. GALLERY MANAGEMENT PANEL */}
+    {/* ============================================================ */}
+    {activeTab === 'gallery' && (
+      <div className="space-y-4 font-sans text-left">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
+          <form onSubmit={handleGallerySearch} className="flex gap-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search title, tags, or caption..."
+              value={gallerySearch}
+              onChange={(e) => setGallerySearch(e.target.value)}
+              className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-64"
+            />
+            <select
+              value={galleryCategory}
+              onChange={(e) => setGalleryCategory(e.target.value)}
+              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
+            >
+              <option value="">All Categories</option>
+              <option value="Sports">Sports</option>
+              <option value="Academics">Academics</option>
+              <option value="Cultural">Cultural</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Events">Events</option>
+              <option value="General">General</option>
+            </select>
+            <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
+              <Search className="w-4 h-4" />
+            </button>
+          </form>
+          <button
+            onClick={() => {
+              setNewGallery({ title: '', category: 'General', tags: '', caption: '' });
+              setSelectedImageFile(null);
+              setImagePreviewUrl('');
+              setShowGalleryModal(true);
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white transition-all w-full sm:w-auto justify-center"
+          >
+            <Plus className="w-4 h-4" /> Add Event Image
+          </button>
+        </div>
+
+        {/* Gallery Admin Grid List */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {galleryItems.length === 0 ? (
+            <div className="col-span-full py-16 text-center text-slate-500 text-xs glass-panel rounded-2xl border border-slate-800">
+              No gallery images found.
+            </div>
+          ) : (
+            galleryItems.map((item) => (
+              <div key={item._id} className="glass-panel border border-slate-850 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-800 transition-all">
+                <div>
+                  <div className="h-40 overflow-hidden relative bg-slate-950 flex items-center justify-center">
+                    <img src={item.imageUrl} alt={item.title} className="max-w-full max-h-full object-cover" />
+                    <span className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-wider text-brand-300 bg-brand-950/80 px-2 py-0.5 rounded-full border border-brand-900/50">
+                      {item.category}
+                    </span>
+                  </div>
+                  <div className="p-4 space-y-2 text-xs">
+                    <h4 className="font-bold text-slate-200 line-clamp-1">{item.title}</h4>
+                    {item.caption && <p className="text-[10px] text-slate-450 line-clamp-3 italic">"{item.caption}"</p>}
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {item.tags.map((t, i) => (
+                          <span key={i} className="text-[8px] text-slate-500 bg-slate-950 border border-slate-850 px-1.5 py-0.5 rounded">
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="p-4 pt-0 flex justify-end">
+                  <button
+                    onClick={() => handleDeleteGalleryItem(item._id)}
+                    className="p-1.5 rounded bg-rose-950/30 border border-rose-900/40 hover:bg-rose-900 text-rose-450 hover:text-white transition-colors text-[10px] flex items-center gap-1 font-bold"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    )}
+
       {/* ============================================================ */}
       {/* MODALS DEFINITION */}
       {/* ============================================================ */}
@@ -1656,6 +1847,158 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* F. GALLERY UPLOAD MODAL */}
+      {showGalleryModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-lg rounded-3xl border border-slate-800 p-6 space-y-6 text-left relative overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-200 font-sans">Upload Campus Image</h3>
+                <p className="text-xs text-slate-500">Publish high-quality photos with AI-generated captions.</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowGalleryModal(false);
+                  setSelectedImageFile(null);
+                  setImagePreviewUrl('');
+                }} 
+                className="text-slate-400 hover:text-slate-250 font-extrabold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateGalleryItem} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Image Title</label>
+                <input
+                  type="text"
+                  required
+                  value={newGallery.title}
+                  onChange={(e) => setNewGallery({ ...newGallery, title: e.target.value })}
+                  placeholder="e.g. Annual Sports Meet 2026 Opening Ceremony"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Category</label>
+                  <select
+                    value={newGallery.category}
+                    onChange={(e) => setNewGallery({ ...newGallery, category: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none font-semibold"
+                  >
+                    <option value="General">General</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Academics">Academics</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Events">Events</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Metadata Tags (Comma Separated)</label>
+                  <input
+                    type="text"
+                    value={newGallery.tags}
+                    onChange={(e) => setNewGallery({ ...newGallery, tags: e.target.value })}
+                    placeholder="e.g. Sports, Ceremony, Athletic Track"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Image upload area */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Select Event Photo</label>
+                <div className="border border-slate-800 border-dashed rounded-xl bg-slate-950/20 p-4 flex flex-col items-center justify-center gap-3 relative hover:bg-slate-900/10 cursor-pointer min-h-[120px]">
+                  <input
+                    type="file"
+                    required
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSelectedImageFile(file);
+                        setImagePreviewUrl(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  {imagePreviewUrl ? (
+                    <div className="flex items-center gap-4 w-full">
+                      <img src={imagePreviewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-slate-800" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-200 font-bold truncate">{selectedImageFile?.name}</p>
+                        <p className="text-[10px] text-slate-500 font-semibold">{(selectedImageFile?.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Camera className="w-8 h-8 text-brand-400 opacity-40" />
+                      <p className="text-[10px] text-slate-500 font-medium text-center">Drag and drop or click to select image (JPEG/PNG/WebP, max 5MB)</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Captioning Block */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-semibold text-slate-400">Description / Caption</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateCaption}
+                    disabled={generatingCaption}
+                    className="text-[10px] bg-brand-950 text-brand-400 border border-brand-900 hover:bg-brand-900 disabled:opacity-40 px-2 py-1 rounded font-bold flex items-center gap-1 transition-all"
+                  >
+                    {generatingCaption ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin text-brand-400" /> Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-gold-400 animate-pulse" /> Generate Caption (AI)
+                      </>
+                    )}
+                  </button>
+                </div>
+                <textarea
+                  value={newGallery.caption}
+                  onChange={(e) => setNewGallery({ ...newGallery, caption: e.target.value })}
+                  placeholder="Provide details about the photo event, or click 'Generate Caption' to let AI write a premium description from tags."
+                  rows="3"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none resize-none font-sans"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-slate-800 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGalleryModal(false);
+                    setSelectedImageFile(null);
+                    setImagePreviewUrl('');
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs font-semibold text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={publishingGallery || !selectedImageFile}
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white transition-all disabled:opacity-50"
+                >
+                  {publishingGallery ? 'Uploading to Cloudinary...' : 'Publish Image'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
