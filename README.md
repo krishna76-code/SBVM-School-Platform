@@ -15,6 +15,7 @@ This system merges a glassmorphic React frontend with an intelligent administrat
 ### 1. 🤖 Artificial Intelligence Core
 *   **AI Admission Counselor (RAG Chat)**: A 24/7 client-facing counselor chat grounded in the school's official prospectus. It reads semantic queries, executes vector searches inside a local **ChromaDB** database, and coordinates with the **Gemini API (`gemini-2.5-flash`)** to return grounded, accurate school details (fees, CBSE affiliation, boarding rules) without hallucinations.
 *   **AI Study Assistant**: A student-only learning workspace. Students can ask curriculum-aligned questions (CBSE standard) and receive explanations along with dynamic self-test MCQs.
+*   **AI Gallery Captioning**: Integrates with the administrator's upload panel, enabling automatic creation of high-quality copy descriptions of campus events by feeding metadata tags directly to the `gemini-2.5-flash` model.
 *   **Transient Load Resilience**: Integrates automatic exponential backoff retry routines on the backend to elegantly bypass free-tier API request peaks (503 Service Unavailable / 429 Rate Limits), falling back to clean inline user notifications if quotas are fully reached.
 
 ### 2. 📊 Administrative Pipeline & Automations
@@ -30,6 +31,12 @@ This system merges a glassmorphic React frontend with an intelligent administrat
 *   **Student Portal**: Noticeboard alerts, homework trackers, marks tables, and printable PDF term report cards.
 *   **Parent Portal**: Live calendar sync for child attendance (marked present/absent), notices, and outstanding fee payment simulations.
 *   **Teacher Panel**: Grid interfaces to mark attendance for classes in under two minutes and batch-input term test marks.
+
+### 4. 🖼️ Interactive "Campus Life" Gallery
+*   **Masonry Grid Layout**: Display school infrastructure, cultural achievements, and sports events in a premium glassmorphic grid with smooth, hardware-accelerated CSS hover zoom states.
+*   **Interactive Sorting**: Dynamic filtering tabs (`Sports`, `Academics`, `Cultural`, `Infrastructure`, `Events`, `General`) that animate elements as they are sorted.
+*   **Full-Screen Lightbox**: High-resolution lightbox media viewer with keyboard navigation (`ArrowLeft`/`ArrowRight`/`Escape`) and metadata description sliders.
+*   **Admin Upload Control**: Admin console upload form integrating Multer memory storage and Cloudinary stream API uploads, with deletion routines that clean up both MongoDB entries and Cloudinary assets.
 
 ---
 
@@ -133,6 +140,9 @@ GEMINI_API_KEY=<your_gemini_api_key_from_google_ai_studio>
 CHROMA_URL=http://localhost:8000
 FRONTEND_URL=http://localhost:5173
 NODE_ENV=development
+CLOUDINARY_CLOUD_NAME=<your_cloudinary_cloud_name>
+CLOUDINARY_API_KEY=<your_cloudinary_api_key>
+CLOUDINARY_API_SECRET=<your_cloudinary_api_secret>
 ```
 
 ---
