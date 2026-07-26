@@ -6,46 +6,12 @@ import StudyDocument from '../models/StudyDocument.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import AppError from '../utils/appError.js';
 import { generateText, generateJson } from '../services/gemini.service.js';
-import { generateEmbedding, batchGenerateEmbeddings } from '../services/embedding.service.js';
-import { addDocuments, queryDocuments, deleteDocuments } from '../services/chroma.service.js';
+import { batchGenerateEmbeddings } from '../services/embedding.service.js';
+import { addDocuments, deleteDocuments } from '../services/chroma.service.js';
 import { getCache, setCache } from '../services/cache.service.js';
-
-// Constants for Text Chunking
-const CHUNK_SIZE = 600;        // tokens ~ characters
-const CHUNK_OVERLAP = 120;     // overlap window for continuity
-
-/**
- * Split raw text into overlapping character-window chunks.
- * Returns array of { text, chunkIndex, charStart, charEnd }
- */
-const chunkText = (rawText) => {
-  const chunks = [];
-  let start = 0;
-  let chunkIndex = 0;
-  const text = rawText.replace(/\s+/g, ' ').trim();
-
-  while (start < text.length) {
-    const end = Math.min(start + CHUNK_SIZE, text.length);
-    const chunkTextStr = text.slice(start, end);
-
-    // Don't add empty or whitespace-only chunks
-    if (chunkTextStr.trim().length > 20) {
-      chunks.push({
-        text: chunkTextStr,
-        chunkIndex,
-        charStart: start,
-        charEnd: end
-      });
-      chunkIndex++;
-    }
-
-    // Move forward with overlap
-    start += CHUNK_SIZE - CHUNK_OVERLAP;
-    if (start >= text.length) break;
-  }
-
-  return chunks;
-};
+import { retrieveContext } from '../services/rag.service.js';
+import { recursiveChunkText } from '../utils/textChunker.js';
+import logger from '../utils/logger.js';
 
 // Helper to truncate text for prompts
 const truncateForPrompt = (text, maxChars = 12000) =>
@@ -107,7 +73,7 @@ export const uploadStudyPDF = asyncHandler(async (req, res) => {
   // Process asynchronously
   (async () => {
     try {
-      const chunks = chunkText(rawText);
+      const chunks = recursiveChunkText(rawText);
       const ids = chunks.map(c => `${namespace}-chunk-${c.chunkIndex}`);
       const documents = chunks.map(c => c.text);
       const embeddings = await batchGenerateEmbeddings(documents);
@@ -128,7 +94,7 @@ export const uploadStudyPDF = asyncHandler(async (req, res) => {
         chunkCount: chunks.length
       });
     } catch (err) {
-      console.error('[StudyAssistant] ChromaDB Ingestion failed:', err.message);
+      logger.error('[StudyAssistant] Vector Ingestion failed', { error: err.message, docId: doc._id });
       await StudyDocument.findByIdAndUpdate(doc._id, {
         status: 'error',
         errorMessage: err.message

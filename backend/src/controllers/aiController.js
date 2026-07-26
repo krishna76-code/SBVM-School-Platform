@@ -1,8 +1,8 @@
 import { generateText } from '../services/gemini.service.js';
-import { generateEmbedding } from '../services/embedding.service.js';
-import { queryDocuments } from '../services/chroma.service.js';
 import { searchFaq, getCache, setCache } from '../services/cache.service.js';
+import { retrieveContext } from '../services/rag.service.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import logger from '../utils/logger.js';
 
 // System Prompts
 const PROSPECTUS_SYSTEM_PROMPT = `
@@ -27,7 +27,7 @@ At the end of your explanation, always generate a short 3-question Multiple Choi
 // @route   POST /api/v1/ai/admission-counselor
 // @access  Public
 export const getAdmissionResponse = asyncHandler(async (req, res) => {
-  const { message, history } = req.body; // history: Array of { role: 'user'|'model', parts: [{ text: String }] }
+  const { message, history } = req.body;
 
   if (!message) {
     return res.status(400).json({ message: 'Message content is required' });
@@ -46,28 +46,11 @@ export const getAdmissionResponse = asyncHandler(async (req, res) => {
       return res.json({ reply: cachedAnswer, source: 'Cache' });
     }
 
-    // 3. Vector Similarity Search in ChromaDB
-    let contextString = '';
-    try {
-      const queryEmbedding = await generateEmbedding(message);
-      const matches = await queryDocuments('prospectus', queryEmbedding, 3);
-
-      if (matches && matches.length > 0) {
-        // Filter matches by cosine similarity threshold (0.3 similarity corresponds to 0.7 distance)
-        const relevantMatches = matches.filter(m => m.score > 0.3);
-        if (relevantMatches.length > 0) {
-          contextString = "Retrieved Prospectus Context:\n" + relevantMatches
-            .map(m => `[Category: ${m.metadata.category || 'Prospectus'} - ${m.metadata.title || 'Section'}]: ${m.text}`)
-            .join('\n\n');
-        }
-      }
-    } catch (chromaError) {
-      console.warn('[AI Controller] ChromaDB query failed, proceeding without vector context:', chromaError.message);
-    }
-
-    if (!contextString) {
-      contextString = "No specific retrieved prospectus chunks match this query directly. Rely on general school profile policies if applicable.";
-    }
+    // 3. Vector Similarity Search via RAG Service
+    const ragResult = await retrieveContext('prospectus', message, { topK: 3, minSimilarityScore: 0.3 });
+    const contextString = ragResult.hasContext 
+      ? `Retrieved Prospectus Context:\n${ragResult.contextString}`
+      : "No specific retrieved prospectus chunks match this query directly. Rely on general school profile policies if applicable.";
 
     // 4. Send context to Gemini
     const reply = await generateText({
@@ -81,7 +64,7 @@ export const getAdmissionResponse = asyncHandler(async (req, res) => {
 
     res.json({ reply, source: 'AI' });
   } catch (error) {
-    console.error('Gemini Counselor Error:', error.message);
+    logger.error('Gemini Counselor Error', { error: error.message });
     if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
       return res.json({
         reply: "Namaste! The AI Counselor has reached its daily free-tier query quota (20 queries/day). Please try again tomorrow, or feel free to contact our admissions desk at +91 9111111111 or email admissions@sbvm.edu.in.",

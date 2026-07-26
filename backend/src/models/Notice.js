@@ -34,5 +34,8 @@ const NoticeSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+NoticeSchema.index({ category: 1, createdAt: -1 });
+NoticeSchema.index({ targetAudience: 1, createdAt: -1 });
+
 const Notice = mongoose.model('Notice', NoticeSchema);
 export default Notice;
