@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 
 export const generateAccessToken = (userId) => {
   return jwt.sign(
     { userId }, 
-    process.env.JWT_SECRET || 'fallback_secret_access', 
+    env.JWT_SECRET, 
     { expiresIn: '15m' }
   );
 };
@@ -11,7 +12,7 @@ export const generateAccessToken = (userId) => {
 export const generateRefreshToken = (userId) => {
   return jwt.sign(
     { userId }, 
-    process.env.JWT_REFRESH_SECRET || 'fallback_secret_refresh', 
+    env.JWT_REFRESH_SECRET, 
     { expiresIn: '7d' }
   );
 };
@@ -19,8 +20,9 @@ export const generateRefreshToken = (userId) => {
 export const sendRefreshTokenCookie = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 };
+

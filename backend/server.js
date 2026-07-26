@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -7,6 +6,9 @@ import rateLimit from 'express-rate-limit';
 
 import mongoose from 'mongoose';
 import connectDB from './src/config/db.js';
+import { env } from './src/config/env.js';
+import logger from './src/utils/logger.js';
+
 import authRoutes from './src/routes/authRoutes.js';
 import admissionRoutes from './src/routes/admissionRoutes.js';
 import academicRoutes from './src/routes/academicRoutes.js';
@@ -23,9 +25,6 @@ import AdminProfile from './src/models/AdminProfile.js';
 import ScholarshipRule from './src/models/ScholarshipRule.js';
 import { seedProspectus } from './src/services/chroma.service.js';
 
-// Load Env variables
-dotenv.config();
-
 // Connect to Database
 await connectDB();
 
@@ -34,7 +33,7 @@ const app = express();
 // Security Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: env.FRONTEND_URL,
   credentials: true
 }));
 app.use(cookieParser());
@@ -81,14 +80,14 @@ app.get('/health', (req, res) => {
 app.use(errorMiddleware);
 
 // Port configuration
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 // Seed Initial Admin User if none exists
 const seedAdmin = async () => {
   try {
     const adminExists = await User.findOne({ role: 'Admin' });
     if (!adminExists) {
-      console.log('No Admin found. Seeding initial System Administrator...');
+      logger.info('No Admin found. Seeding initial System Administrator...');
       
       const userId = new mongoose.Types.ObjectId();
       const adminProfile = await AdminProfile.create({
@@ -98,24 +97,20 @@ const seedAdmin = async () => {
         designation: 'Director of Operations'
       });
 
-      const adminUser = await User.create({
+      await User.create({
         _id: userId,
-        email: 'admin@sbvm.edu.in',
+        email: env.SEED_ADMIN_EMAIL,
         phone: '9111111111',
-        passwordHash: 'adminPassword123', // Pre-save hooks hashes this
+        passwordHash: env.SEED_ADMIN_PASSWORD, // Pre-save hook hashes password
         role: 'Admin',
         profileRef: adminProfile._id,
         roleRefModel: 'AdminProfile'
       });
 
-      console.log('==================================================');
-      console.log('ADMIN SEEDED SUCCESSFULLY');
-      console.log('Login Email: admin@sbvm.edu.in');
-      console.log('Password: adminPassword123');
-      console.log('==================================================');
+      logger.info('ADMIN SEEDED SUCCESSFULLY', { email: env.SEED_ADMIN_EMAIL });
     }
   } catch (error) {
-    console.error('Error seeding admin:', error.message);
+    logger.error('Error seeding admin', { error: error.message });
   }
 };
 
@@ -123,7 +118,7 @@ const seedScholarships = async () => {
   try {
     const rulesCount = await ScholarshipRule.countDocuments();
     if (rulesCount === 0) {
-      console.log('No Scholarship Rules found. Seeding initial rule templates...');
+      logger.info('No Scholarship Rules found. Seeding initial rule templates...');
       
       await ScholarshipRule.create([
         {
@@ -184,16 +179,17 @@ const seedScholarships = async () => {
           ]
         }
       ]);
-      console.log('Scholarship rules seeded successfully.');
+      logger.info('Scholarship rules seeded successfully.');
     }
   } catch (err) {
-    console.error('Error seeding scholarship rules:', err.message);
+    logger.error('Error seeding scholarship rules', { error: err.message });
   }
 };
 
 app.listen(PORT, async () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  logger.info(`Server running in ${env.NODE_ENV} mode on port ${PORT}`);
   await seedAdmin();
   await seedScholarships();
   await seedProspectus();
 });
+

@@ -4,6 +4,7 @@ import { generateAccessToken, generateRefreshToken, sendRefreshTokenCookie } fro
 import jwt from 'jsonwebtoken';
 import asyncHandler from '../utils/asyncHandler.js';
 import AppError from '../utils/appError.js';
+import { env } from '../config/env.js';
 
 // @desc    Register a new Guest Applicant
 // @route   POST /api/v1/auth/register-applicant
@@ -105,7 +106,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET || 'fallback_secret_refresh');
+    const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.userId).populate({
       path: 'profileRef',
       populate: { path: 'children' }

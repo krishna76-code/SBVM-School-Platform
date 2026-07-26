@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { env } from '../config/env.js';
+import logger from '../utils/logger.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -7,15 +9,15 @@ export const protect = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_access');
+      const decoded = jwt.verify(token, env.JWT_SECRET);
       
       req.user = await User.findById(decoded.userId).select('-passwordHash');
       if (!req.user) {
         return res.status(401).json({ message: 'User associated with this token no longer exists' });
       }
-      next();
+      return next();
     } catch (error) {
-      console.error('JWT Verification Error:', error.message);
+      logger.warn('JWT Verification Error', { error: error.message });
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
@@ -24,6 +26,7 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, no token provided' });
   }
 };
+
 
 export const authorize = (...roles) => {
   return (req, res, next) => {
