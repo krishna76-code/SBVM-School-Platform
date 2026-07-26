@@ -6,6 +6,15 @@ import {
 } from 'lucide-react';
 import API from '../services/api';
 
+import OverviewTab from '../components/dashboard/OverviewTab';
+import AdmissionsTab from '../components/dashboard/AdmissionsTab';
+import NoticesTab from '../components/dashboard/NoticesTab';
+import ResultsTab from '../components/dashboard/ResultsTab';
+import StudentsTab from '../components/dashboard/StudentsTab';
+import ParentsTab from '../components/dashboard/ParentsTab';
+import ScholarshipsTab from '../components/dashboard/ScholarshipsTab';
+import GalleryTab from '../components/dashboard/GalleryTab';
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
@@ -487,886 +496,91 @@ const AdminDashboard = () => {
         })}
       </div>
 
-      {/* ============================================================ */}
-      {/* 1. OVERVIEW TAB */}
-      {/* ============================================================ */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Dashboard Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-400">Total Applications</span>
-                <span className="p-1.5 bg-blue-950 text-blue-400 rounded-lg text-xs font-bold">Admissions</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-slate-100">{overviewStats.totalApplications}</h3>
-              <p className="text-[10px] text-slate-500">Total candidates in system</p>
-            </div>
-
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-400">Enrolled Students</span>
-                <span className="p-1.5 bg-emerald-950 text-emerald-400 rounded-lg text-xs font-bold">Roster</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-slate-100">{overviewStats.totalStudents}</h3>
-              <p className="text-[10px] text-slate-500">Active permanent student files</p>
-            </div>
-
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-400">Pending Reviews</span>
-                <span className="p-1.5 bg-amber-950 text-amber-400 rounded-lg text-xs font-bold animate-pulse">Action Required</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-slate-100">{overviewStats.pendingApplications}</h3>
-              <p className="text-[10px] text-slate-500">Awaiting document verification</p>
-            </div>
-          </div>
-
-          {/* Recent Activity Log */}
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-            <h3 className="font-bold text-slate-200 text-sm font-sans flex items-center gap-1.5">
-              <RefreshCw className="w-4 h-4 text-gold-400 animate-spin" style={{ animationDuration: '6s' }} /> Recent Institutional Activity
-            </h3>
-            
-            <div className="divide-y divide-slate-850">
-              {overviewStats.recentActivity.length === 0 ? (
-                <p className="text-slate-500 text-xs py-4 text-center">No recent activities logged.</p>
-              ) : (
-                overviewStats.recentActivity.map((act, index) => (
-                  <div key={index} className="py-3.5 flex justify-between items-start gap-4 text-xs">
-                    <div className="space-y-1">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                        act.type === 'Admission' ? 'bg-blue-950 text-blue-400 border border-blue-900/30' :
-                        act.type === 'Notice' ? 'bg-purple-950 text-purple-400 border border-purple-900/30' :
-                        'bg-emerald-950 text-emerald-400 border border-emerald-900/30'
-                      }`}>
-                        {act.type}
-                      </span>
-                      <p className="text-slate-300 mt-1 font-medium">{act.description}</p>
-                    </div>
-                    <span className="text-[10px] text-slate-500 shrink-0 font-medium">{new Date(act.date).toLocaleDateString()}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* 2. ADMISSIONS PIPELINE */}
-      {/* ============================================================ */}
-      {activeTab === 'admissions' && (
-        <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/50 border-b border-slate-800 text-slate-400 uppercase font-semibold">
-              <tr>
-                <th className="p-4">Candidate</th>
-                <th className="p-4">Class</th>
-                <th className="p-4">Score</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-850">
-              {admissions.length === 0 ? (
-                <tr><td colSpan="5" className="p-6 text-center text-slate-500">No applications registered.</td></tr>
-              ) : (
-                admissions.map((app) => (
-                  <tr key={app._id} className="hover:bg-slate-900/20 transition-all">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-200">{app.firstName} {app.lastName}</div>
-                      <div className="text-[10px] text-slate-500">{app.parentEmail}</div>
-                    </td>
-                    <td className="p-4 text-slate-300 font-medium">{app.appliedClass}</td>
-                    <td className="p-4 text-slate-300 font-medium">
-                      {app.marksPercentage !== undefined && app.marksPercentage !== null ? `${app.marksPercentage}%` : 'N/A'}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        app.status === 'Submitted' ? 'bg-blue-950 text-blue-400 border border-blue-900/50' :
-                        app.status === 'Under Review' ? 'bg-amber-950 text-amber-400 border border-amber-900/50' :
-                        app.status === 'Approved' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/50' :
-                        app.status === 'Rejected' ? 'bg-rose-950 text-rose-400 border border-rose-900/50' :
-                        'bg-slate-900 text-slate-400 border border-slate-800' // Draft
-                      }`}>
-                        {app.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => handleOpenAdmModal(app)}
-                        className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 font-semibold text-slate-300 transition-all text-[11px] inline-flex items-center gap-1"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Review
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* 3. NOTICES MODULE */}
-      {/* ============================================================ */}
+      {/* TAB CONTENT RENDERING */}
+      {activeTab === 'overview' && <OverviewTab overviewStats={overviewStats} />}
+      {activeTab === 'admissions' && <AdmissionsTab admissions={admissions} handleOpenAdmModal={handleOpenAdmModal} />}
       {activeTab === 'notices' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
-            <form onSubmit={handleNoticeSearch} className="flex gap-2 w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="Search notices..."
-                value={noticeSearch}
-                onChange={(e) => setNoticeSearch(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-64"
-              />
-              <select
-                value={noticeCategory}
-                onChange={(e) => setNoticeCategory(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
-              >
-                <option value="">All Categories</option>
-                <option value="Academic">Academic</option>
-                <option value="Event">Event</option>
-                <option value="Exam">Exam</option>
-                <option value="Admission">Admission</option>
-                <option value="General">General</option>
-              </select>
-              <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
-                <Search className="w-4 h-4" />
-              </button>
-            </form>
-            <button
-              onClick={() => setShowNoticeModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white transition-all w-full sm:w-auto justify-center"
-            >
-              <Plus className="w-4 h-4" /> Create Notice
-            </button>
-          </div>
-
-          {/* Notices Data Table */}
-          <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900/50 border-b border-slate-800 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="p-4">Title</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Audience</th>
-                  <th className="p-4">Published By</th>
-                  <th className="p-4 text-right">Delete</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-850">
-                {notices.length === 0 ? (
-                  <tr><td colSpan="5" className="p-6 text-center text-slate-500">No notices matches filters.</td></tr>
-                ) : (
-                  notices.map((n) => (
-                    <tr key={n._id} className="hover:bg-slate-900/20 transition-all text-slate-300">
-                      <td className="p-4 font-bold text-slate-200">
-                        <div>{n.title}</div>
-                        <div className="text-[10px] text-slate-500 font-normal mt-0.5 truncate max-w-sm">{n.content}</div>
-                      </td>
-                      <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-950/60 text-purple-300 border border-purple-900/40">{n.category}</span></td>
-                      <td className="p-4 font-medium">{n.targetAudience?.join(', ') || 'All'}</td>
-                      <td className="p-4 text-slate-400 font-medium">{n.publishedBy?.email || 'System'}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => handleDeleteNotice(n._id)}
-                          className="p-1.5 rounded bg-rose-950/30 border border-rose-900/40 hover:bg-rose-900 text-rose-400 hover:text-white transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {noticePages > 1 && (
-            <div className="flex justify-between items-center px-2 py-2">
-              <button
-                disabled={noticePage === 1}
-                onClick={() => setNoticePage(noticePage - 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Previous
-              </button>
-              <span className="text-slate-400 text-xs">Page {noticePage} of {noticePages}</span>
-              <button
-                disabled={noticePage === noticePages}
-                onClick={() => setNoticePage(noticePage + 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        <NoticesTab
+          notices={notices}
+          noticeSearch={noticeSearch}
+          setNoticeSearch={setNoticeSearch}
+          noticeCategory={noticeCategory}
+          setNoticeCategory={setNoticeCategory}
+          noticePage={noticePage}
+          noticePages={noticePages}
+          setNoticePage={setNoticePage}
+          handleNoticeSearch={handleNoticeSearch}
+          handleDeleteNotice={handleDeleteNotice}
+          setShowNoticeModal={setShowNoticeModal}
+        />
       )}
-
-      {/* ============================================================ */}
-      {/* 4. RESULTS MODULE */}
-      {/* ============================================================ */}
       {activeTab === 'results' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
-            <form onSubmit={handleResultSearch} className="flex gap-2 w-full sm:w-auto flex-wrap">
-              <input
-                type="text"
-                placeholder="Student Name..."
-                value={resultSearch}
-                onChange={(e) => setResultSearch(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-48"
-              />
-              <select
-                value={resultClass}
-                onChange={(e) => setResultClass(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
-              >
-                <option value="">All Classes</option>
-                {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select
-                value={resultTerm}
-                onChange={(e) => setResultTerm(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
-              >
-                <option value="">All Terms</option>
-                <option value="Quarterly">Quarterly</option>
-                <option value="Half-Yearly">Half-Yearly</option>
-                <option value="Annual">Annual</option>
-              </select>
-              <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
-                <Search className="w-4 h-4" />
-              </button>
-            </form>
-            <button
-              onClick={() => setShowResultModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white transition-all w-full sm:w-auto justify-center"
-            >
-              <Plus className="w-4 h-4" /> Publish Grades
-            </button>
-          </div>
-
-          {/* Results Table */}
-          <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900/50 border-b border-slate-800 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="p-4">Student</th>
-                  <th className="p-4">Class</th>
-                  <th className="p-4">Term</th>
-                  <th className="p-4">Percentage</th>
-                  <th className="p-4 text-right">Delete</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-850">
-                {results.length === 0 ? (
-                  <tr><td colSpan="5" className="p-6 text-center text-slate-500">No report cards logged.</td></tr>
-                ) : (
-                  results.map((r) => (
-                    <tr key={r._id} className="hover:bg-slate-900/20 transition-all text-slate-300">
-                      <td className="p-4 font-bold text-slate-200">
-                        {r.student?.firstName} {r.student?.lastName}
-                        <div className="text-[10px] text-slate-500 font-normal">Roll Num: {r.student?.rollNumber || 'N/A'}</div>
-                      </td>
-                      <td className="p-4 font-semibold">{r.class}</td>
-                      <td className="p-4 font-medium">{r.term} ({r.academicYear})</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          r.overallGrade === 'Pass' ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/30' : 'bg-rose-950 text-rose-400 border border-rose-900/30'
-                        }`}>
-                          {r.totalPercentage}% • {r.overallGrade}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => handleDeleteResult(r._id)}
-                          className="p-1.5 rounded bg-rose-950/30 border border-rose-900/40 hover:bg-rose-900 text-rose-400 hover:text-white transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Results Pagination */}
-          {resultPages > 1 && (
-            <div className="flex justify-between items-center px-2 py-2">
-              <button
-                disabled={resultPage === 1}
-                onClick={() => setResultPage(resultPage - 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Previous
-              </button>
-              <span className="text-slate-400 text-xs">Page {resultPage} of {resultPages}</span>
-              <button
-                disabled={resultPage === resultPages}
-                onClick={() => setResultPage(resultPage + 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        <ResultsTab
+          results={results}
+          resultSearch={resultSearch}
+          setResultSearch={setResultSearch}
+          resultClass={resultClass}
+          setResultClass={setResultClass}
+          resultTerm={resultTerm}
+          setResultTerm={setResultTerm}
+          classOptions={classOptions}
+          handleResultSearch={handleResultSearch}
+          handleDeleteResult={handleDeleteResult}
+          setShowResultModal={setShowResultModal}
+        />
       )}
-
-      {/* ============================================================ */}
-      {/* 5. STUDENTS DIRECTORY */}
-      {/* ============================================================ */}
       {activeTab === 'students' && (
-        <div className="space-y-4">
-          <form onSubmit={handleStudentSearch} className="flex gap-2 w-full sm:w-auto bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
-            <input
-              type="text"
-              placeholder="Search Student Name / Adm No..."
-              value={studentSearch}
-              onChange={(e) => setStudentSearch(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-64"
-            />
-            <select
-              value={studentClass}
-              onChange={(e) => setStudentClass(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
-            >
-              <option value="">All Classes</option>
-              {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
-
-          {/* Students Directory Table */}
-          <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900/50 border-b border-slate-800 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="p-4">Student Name</th>
-                  <th className="p-4">Admission Number</th>
-                  <th className="p-4">Class</th>
-                  <th className="p-4">Parent Reference</th>
-                  <th className="p-4 text-right">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-850">
-                {students.length === 0 ? (
-                  <tr><td colSpan="5" className="p-6 text-center text-slate-500">No student files registered.</td></tr>
-                ) : (
-                  students.map((s) => (
-                    <tr key={s._id} className="hover:bg-slate-900/20 transition-all text-slate-300">
-                      <td className="p-4 font-bold text-slate-200">
-                        {s.firstName} {s.lastName}
-                        <div className="text-[10px] text-slate-500 font-normal">Roll No: {s.rollNumber || 'N/A'}</div>
-                      </td>
-                      <td className="p-4 font-mono text-slate-400 font-semibold">{s.admissionNumber || 'Pending'}</td>
-                      <td className="p-4 font-medium">{s.currentClass} (Sec {s.section})</td>
-                      <td className="p-4">
-                        <div className="font-medium">{s.parent?.fatherName || 'N/A'}</div>
-                        <div className="text-[10px] text-slate-500">Phone: {s.parent?.emergencyContact || 'N/A'}</div>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => setSelectedStudentDetail(s)}
-                          className="px-3 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 font-semibold text-[10px]"
-                        >
-                          View Profile
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Student Pagination */}
-          {studentPages > 1 && (
-            <div className="flex justify-between items-center px-2 py-2">
-              <button
-                disabled={studentPage === 1}
-                onClick={() => setStudentPage(studentPage - 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Previous
-              </button>
-              <span className="text-slate-400 text-xs">Page {studentPage} of {studentPages}</span>
-              <button
-                disabled={studentPage === studentPages}
-                onClick={() => setStudentPage(studentPage + 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        <StudentsTab
+          students={students}
+          studentSearch={studentSearch}
+          setStudentSearch={setStudentSearch}
+          studentClass={studentClass}
+          setStudentClass={setStudentClass}
+          studentPage={studentPage}
+          studentPages={studentPages}
+          setStudentPage={setStudentPage}
+          classOptions={classOptions}
+          handleStudentSearch={handleStudentSearch}
+          setSelectedStudentDetail={setSelectedStudentDetail}
+        />
       )}
-
-      {/* ============================================================ */}
-      {/* 6. PARENTS DIRECTORY */}
-      {/* ============================================================ */}
       {activeTab === 'parents' && (
-        <div className="space-y-4">
-          <form onSubmit={handleParentSearch} className="flex gap-2 w-full sm:w-auto bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
-            <input
-              type="text"
-              placeholder="Search Father/Mother Name or Contact..."
-              value={parentSearch}
-              onChange={(e) => setParentSearch(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-64"
-            />
-            <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
-
-          {/* Parents Directory Table */}
-          <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-900/50 border-b border-slate-800 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="p-4">Father Name</th>
-                  <th className="p-4">Mother Name</th>
-                  <th className="p-4">Contact Phone</th>
-                  <th className="p-4">Email Credentials</th>
-                  <th className="p-4 text-right">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-850">
-                {parents.length === 0 ? (
-                  <tr><td colSpan="5" className="p-6 text-center text-slate-500">No parent profiles registered.</td></tr>
-                ) : (
-                  parents.map((p) => (
-                    <tr key={p._id} className="hover:bg-slate-900/20 transition-all text-slate-300">
-                      <td className="p-4 font-bold text-slate-200">{p.fatherName}</td>
-                      <td className="p-4 font-medium">{p.motherName}</td>
-                      <td className="p-4 text-slate-300 font-semibold">{p.emergencyContact}</td>
-                      <td className="p-4 font-medium text-slate-400">{p.user?.email || 'N/A'}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => setSelectedParentDetail(p)}
-                          className="px-3 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 font-semibold text-[10px]"
-                        >
-                          Children ({p.children?.length || 0})
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Parent Pagination */}
-          {parentPages > 1 && (
-            <div className="flex justify-between items-center px-2 py-2">
-              <button
-                disabled={parentPage === 1}
-                onClick={() => setParentPage(parentPage - 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Previous
-              </button>
-              <span className="text-slate-400 text-xs">Page {parentPage} of {parentPages}</span>
-              <button
-                disabled={parentPage === parentPages}
-                onClick={() => setParentPage(parentPage + 1)}
-                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 text-slate-400 disabled:opacity-40 text-xs font-semibold"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        <ParentsTab
+          parents={parents}
+          parentSearch={parentSearch}
+          setParentSearch={setParentSearch}
+          parentPage={parentPage}
+          parentPages={parentPages}
+          setParentPage={setParentPage}
+          handleParentSearch={handleParentSearch}
+          setSelectedParentDetail={setSelectedParentDetail}
+        />
       )}
-
-    {/* ============================================================ */}
-    {/* 7. SCHOLARSHIPS RULES EDITOR */}
-    {/* ============================================================ */}
-    {activeTab === 'scholarships' && (
-      <div className="space-y-6 font-sans">
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-1.5 font-sans">
-              <Award className="w-5 h-5 text-gold-400 animate-pulse" /> Scholarship Rules Panel
-            </h3>
-            <p className="text-slate-400 text-xs mt-1 font-normal">Configure merit score tiers, sports/need criteria, and eligible classes in real-time.</p>
-          </div>
-        </div>
-
-        {editingRule ? (
-          <form onSubmit={handleSaveRule} className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-6 text-xs text-left">
-            <div className="flex justify-between items-center border-b border-slate-850 pb-4">
-              <h4 className="text-sm font-bold text-slate-200">Editing Rules for: <span className="text-gold-455 font-sans">{editingRule.classRange}</span></h4>
-              <button type="button" onClick={() => setEditingRule(null)} className="text-slate-400 hover:text-slate-200 font-bold">✕ Close Editor</button>
-            </div>
-
-            {/* Tiers Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Board Tiers */}
-              <div className="space-y-4">
-                <span className="text-slate-400 font-bold block uppercase text-[10px] tracking-wide border-b border-slate-850 pb-1.5">Previous Board Marks Tiers</span>
-                {editingRule.boardTiers.map((tier, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <span className="text-[10px] text-slate-500 font-semibold w-16">Min Marks %:</span>
-                    <input 
-                      type="number" 
-                      value={tier.minScore} 
-                      onChange={(e) => {
-                        const updated = [...editingRule.boardTiers];
-                        updated[idx].minScore = Number(e.target.value);
-                        setEditingRule({ ...editingRule, boardTiers: updated });
-                      }}
-                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 w-20 focus:outline-none"
-                    />
-                    <span className="text-[10px] text-slate-500 font-semibold">Waiver %:</span>
-                    <input 
-                      type="number" 
-                      value={tier.concession} 
-                      onChange={(e) => {
-                        const updated = [...editingRule.boardTiers];
-                        updated[idx].concession = Number(e.target.value);
-                        setEditingRule({ ...editingRule, boardTiers: updated });
-                      }}
-                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 w-20 focus:outline-none"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        const updated = editingRule.boardTiers.filter((_, i) => i !== idx);
-                        setEditingRule({ ...editingRule, boardTiers: updated });
-                      }}
-                      className="text-rose-400 hover:text-rose-300 font-semibold px-2 text-[10px]"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    const updated = [...editingRule.boardTiers, { minScore: 80, concession: 10 }];
-                    setEditingRule({ ...editingRule, boardTiers: updated });
-                  }}
-                  className="text-brand-400 hover:text-brand-350 block font-bold text-[10px]"
-                >
-                  + Add Board Score Tier
-                </button>
-              </div>
-
-              {/* Entrance Tiers */}
-              <div className="space-y-4">
-                <span className="text-slate-400 font-bold block uppercase text-[10px] tracking-wide border-b border-slate-850 pb-1.5">Entrance Test Tiers</span>
-                {editingRule.entranceTiers.map((tier, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <span className="text-[10px] text-slate-500 font-semibold w-16">Min Score %:</span>
-                    <input 
-                      type="number" 
-                      value={tier.minScore} 
-                      onChange={(e) => {
-                        const updated = [...editingRule.entranceTiers];
-                        updated[idx].minScore = Number(e.target.value);
-                        setEditingRule({ ...editingRule, entranceTiers: updated });
-                      }}
-                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 w-20 focus:outline-none"
-                    />
-                    <span className="text-[10px] text-slate-500 font-semibold">Waiver %:</span>
-                    <input 
-                      type="number" 
-                      value={tier.concession} 
-                      onChange={(e) => {
-                        const updated = [...editingRule.entranceTiers];
-                        updated[idx].concession = Number(e.target.value);
-                        setEditingRule({ ...editingRule, entranceTiers: updated });
-                      }}
-                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 w-20 focus:outline-none"
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        const updated = editingRule.entranceTiers.filter((_, i) => i !== idx);
-                        setEditingRule({ ...editingRule, entranceTiers: updated });
-                      }}
-                      className="text-rose-400 hover:text-rose-300 font-semibold px-2 text-[10px]"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    const updated = [...editingRule.entranceTiers, { minScore: 80, concession: 10 }];
-                    setEditingRule({ ...editingRule, entranceTiers: updated });
-                  }}
-                  className="text-brand-400 hover:text-brand-350 block font-bold text-[10px]"
-                >
-                  + Add Entrance Score Tier
-                </button>
-              </div>
-            </div>
-
-            {/* Other Concessions */}
-            <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-850">
-              <div className="space-y-4">
-                <span className="text-slate-400 font-bold block uppercase text-[10px] tracking-wide border-b border-slate-850 pb-1.5">Sports Achievement Concessions</span>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">National Level Concession %</label>
-                    <input 
-                      type="number" 
-                      value={editingRule.sportsNationalConcession} 
-                      onChange={(e) => setEditingRule({ ...editingRule, sportsNationalConcession: Number(e.target.value) })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">State Level Concession %</label>
-                    <input 
-                      type="number" 
-                      value={editingRule.sportsStateConcession} 
-                      onChange={(e) => setEditingRule({ ...editingRule, sportsStateConcession: Number(e.target.value) })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <span className="text-slate-400 font-bold block uppercase text-[10px] tracking-wide border-b border-slate-850 pb-1.5">Need-based & Caps</span>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">Income &lt; 2.5L %</label>
-                    <input 
-                      type="number" 
-                      value={editingRule.incomeBelow25kConcession} 
-                      onChange={(e) => setEditingRule({ ...editingRule, incomeBelow25kConcession: Number(e.target.value) })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">Income &lt; 5.0L %</label>
-                    <input 
-                      type="number" 
-                      value={editingRule.incomeBelow50kConcession} 
-                      onChange={(e) => setEditingRule({ ...editingRule, incomeBelow50kConcession: Number(e.target.value) })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-medium mb-1">Total Cap %</label>
-                    <input 
-                      type="number" 
-                      value={editingRule.maxTotalConcession} 
-                      onChange={(e) => setEditingRule({ ...editingRule, maxTotalConcession: Number(e.target.value) })}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Eligible Classes */}
-            <div className="space-y-3 pt-4 border-t border-slate-850">
-              <span className="text-slate-400 font-bold block uppercase text-[10px] tracking-wide border-b border-slate-850 pb-1.5">Eligible Programs / Standard Options</span>
-              <div className="flex flex-wrap gap-2.5 pt-1.5">
-                {classOptions.map((c) => {
-                  const isChecked = editingRule.eligiblePrograms.includes(c);
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => {
-                        const updated = isChecked
-                          ? editingRule.eligiblePrograms.filter(p => p !== c)
-                          : [...editingRule.eligiblePrograms, c];
-                        setEditingRule({ ...editingRule, eligiblePrograms: updated });
-                      }}
-                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                        isChecked
-                          ? 'bg-brand-950/40 border-brand-500 text-brand-400'
-                          : 'bg-slate-900 border-slate-850 text-slate-450 hover:text-slate-350'
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-slate-800 pt-4">
-              <button
-                type="button"
-                onClick={() => setEditingRule(null)}
-                className="px-4 py-2 rounded-xl border border-slate-800 hover:bg-slate-900 text-xs font-semibold text-slate-300"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                disabled={savingRule}
-                className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white transition-all shadow-md shadow-brand-500/10"
-              >
-                {savingRule ? 'Saving Changes...' : 'Save Configuration'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            {scholarshipRules.map((rule) => (
-              <div key={rule._id} className="glass-panel p-6 rounded-2xl border border-slate-850 space-y-4 text-xs flex flex-col justify-between hover:border-slate-800 transition-all">
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase font-extrabold text-gold-400 tracking-wider bg-gold-950/20 px-2.5 py-0.5 rounded border border-gold-500/20 inline-block font-sans">
-                    {rule.classRange}
-                  </span>
-                  
-                  <div className="space-y-1.5 pt-2">
-                    <span className="text-slate-400 font-bold block mb-1">Concession Merit Thresholds:</span>
-                    {rule.boardTiers.map((t, idx) => (
-                      <div key={idx} className="flex justify-between text-slate-300">
-                        <span>Board Marks &ge; {t.minScore}%:</span>
-                        <span className="font-bold text-slate-200">{t.concession}% Waiver</span>
-                      </div>
-                    ))}
-                    {rule.entranceTiers.map((t, idx) => (
-                      <div key={idx} className="flex justify-between text-slate-300">
-                        <span>Entrance Marks &ge; {t.minScore}%:</span>
-                        <span className="font-bold text-slate-200">{t.concession}% Waiver</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-slate-900 pt-2.5 space-y-1.5">
-                    <div className="flex justify-between text-slate-400">
-                      <span>Sports (National / State):</span>
-                      <span className="font-semibold text-slate-300">{rule.sportsNationalConcession}% / {rule.sportsStateConcession}%</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Needs (Below 2.5L / 5L):</span>
-                      <span className="font-semibold text-slate-300">{rule.incomeBelow25kConcession}% / {rule.incomeBelow50kConcession}%</span>
-                    </div>
-                    <div className="flex justify-between text-slate-400 font-bold text-gold-400 pt-1 border-t border-slate-900/50 font-sans">
-                      <span>Maximum Concession Cap:</span>
-                      <span>{rule.maxTotalConcession}% Cap</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setEditingRule(JSON.parse(JSON.stringify(rule)))}
-                  className="w-full py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-850 hover:border-slate-700 text-slate-300 font-bold text-[11px] transition-all"
-                >
-                  Edit Rules Configuration
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    )}
-
-    {/* ============================================================ */}
-    {/* 8. GALLERY MANAGEMENT PANEL */}
-    {/* ============================================================ */}
-    {activeTab === 'gallery' && (
-      <div className="space-y-4 font-sans text-left">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900/20 p-4 rounded-2xl border border-slate-850">
-          <form onSubmit={handleGallerySearch} className="flex gap-2 w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Search title, tags, or caption..."
-              value={gallerySearch}
-              onChange={(e) => setGallerySearch(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none w-full sm:w-64"
-            />
-            <select
-              value={galleryCategory}
-              onChange={(e) => setGalleryCategory(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400 focus:outline-none"
-            >
-              <option value="">All Categories</option>
-              <option value="Sports">Sports</option>
-              <option value="Academics">Academics</option>
-              <option value="Cultural">Cultural</option>
-              <option value="Infrastructure">Infrastructure</option>
-              <option value="Events">Events</option>
-              <option value="General">General</option>
-            </select>
-            <button type="submit" className="p-2 bg-brand-650 hover:bg-brand-600 rounded-xl text-white">
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
-          <button
-            onClick={() => {
-              setNewGallery({ title: '', category: 'General', tags: '', caption: '' });
-              setSelectedImageFile(null);
-              setImagePreviewUrl('');
-              setShowGalleryModal(true);
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-bold text-white transition-all w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-4 h-4" /> Add Event Image
-          </button>
-        </div>
-
-        {/* Gallery Admin Grid List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {galleryItems.length === 0 ? (
-            <div className="col-span-full py-16 text-center text-slate-500 text-xs glass-panel rounded-2xl border border-slate-800">
-              No gallery images found.
-            </div>
-          ) : (
-            galleryItems.map((item) => (
-              <div key={item._id} className="glass-panel border border-slate-850 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-800 transition-all">
-                <div>
-                  <div className="h-40 overflow-hidden relative bg-slate-950 flex items-center justify-center">
-                    <img src={item.imageUrl} alt={item.title} className="max-w-full max-h-full object-cover" />
-                    <span className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-wider text-brand-300 bg-brand-950/80 px-2 py-0.5 rounded-full border border-brand-900/50">
-                      {item.category}
-                    </span>
-                  </div>
-                  <div className="p-4 space-y-2 text-xs">
-                    <h4 className="font-bold text-slate-200 line-clamp-1">{item.title}</h4>
-                    {item.caption && <p className="text-[10px] text-slate-450 line-clamp-3 italic">"{item.caption}"</p>}
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {item.tags.map((t, i) => (
-                          <span key={i} className="text-[8px] text-slate-500 bg-slate-950 border border-slate-850 px-1.5 py-0.5 rounded">
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="p-4 pt-0 flex justify-end">
-                  <button
-                    onClick={() => handleDeleteGalleryItem(item._id)}
-                    className="p-1.5 rounded bg-rose-950/30 border border-rose-900/40 hover:bg-rose-900 text-rose-450 hover:text-white transition-colors text-[10px] flex items-center gap-1 font-bold"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    )}
+      {activeTab === 'scholarships' && (
+        <ScholarshipsTab
+          scholarshipRules={scholarshipRules}
+          editingRule={editingRule}
+          setEditingRule={setEditingRule}
+          savingRule={savingRule}
+          classOptions={classOptions}
+          handleSaveRule={handleSaveRule}
+        />
+      )}
+      {activeTab === 'gallery' && (
+        <GalleryTab
+          galleryItems={galleryItems}
+          gallerySearch={gallerySearch}
+          setGallerySearch={setGallerySearch}
+          galleryCategory={galleryCategory}
+          setGalleryCategory={setGalleryCategory}
+          handleGallerySearch={handleGallerySearch}
+          handleDeleteGalleryItem={handleDeleteGalleryItem}
+          setShowGalleryModal={setShowGalleryModal}
+          setNewGallery={setNewGallery}
+          setSelectedImageFile={setSelectedImageFile}
+          setImagePreviewUrl={setImagePreviewUrl}
+        />
+      )}
 
       {/* ============================================================ */}
       {/* MODALS DEFINITION */}
